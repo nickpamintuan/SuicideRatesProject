@@ -1,0 +1,163 @@
+SELECT *
+FROM SuicideRatesProject..SuicideRates
+
+-- Deleting 'Country-Year' Column from the table
+Alter table SuicideRatesProject..SuicideRates
+Drop column countryyear;
+
+
+-- Calculating suicide rates for each country
+select country, year, sex, age, suicides_no, population, (suicides_no / population) * 100  as Suicide_rate
+from SuicideRatesProject..SuicideRates
+where suicides_no <> 0
+order by 1,2
+
+-- Calculating the Max/Min number of suicides per year for each country
+select country, year, sex
+, MAX(suicides_no) as Max_suicides
+, MIN(suicides_no) as Min_suicides
+from SuicideRatesProject..SuicideRates
+group by country, year, sex
+order by 1,2
+
+-- Calculating Max/Min suicides by country
+Select country
+, MAX(suicides_no) as Max_suicides
+, MIN(suicides_no) as Min_suicides
+From SuicideRatesProject..SuicideRates
+group by country
+order by 2 desc
+
+-- Calculating Max/Min suicides per year
+Select country, year
+, MAX(suicides_no) as Max_suicides
+, MIN(suicides_no) as Min_suicides
+From SuicideRatesProject..SuicideRates
+group by country, year
+order by 1,2 
+
+
+-- Calculating total suicides by age
+Select age, SUM(suicides_no) as Total_suicides
+From SuicideRatesProject..SuicideRates
+group by age
+order by 2 desc
+
+
+-- Calculating each countries total suicides by age group
+Select country, age, SUM(suicides_no) as Total_suicides
+From SuicideRatesProject..SuicideRates
+group by country, age
+order by 1,3 desc
+
+-- Calculating total suicides for each gender
+Select sex, SUM(suicides_no) as Total_suicides
+From SuicideRatesProject..SuicideRates
+group by sex
+order by 2 desc
+
+
+-- Calculating total suicides by country
+Select country, SUM(suicides_no) as Total_suicides
+From SuicideRatesProject..SuicideRates
+group by country
+order by 2 desc
+
+
+-- Calculating each countries total suicides by gender 
+Select country, sex, SUM(suicides_no) as Total_suicides
+From SuicideRatesProject..SuicideRates
+group by country, sex
+order by 3 desc
+
+
+-- Calculating total suicides by generation
+Select generation, SUM(suicides_no) as Total_suicides
+From SuicideRatesProject..SuicideRates
+--where year between 2000 and 2010
+group by generation
+order by 2 desc
+
+
+-- Calculating total suicides by generation and sex
+Select generation, sex, SUM(suicides_no) as Total_suicides
+From SuicideRatesProject..SuicideRates
+--where year between 2000 and 2010
+group by generation, sex
+order by 1,2,3 desc
+
+
+-- Calculating total suicides by country and generation
+Select country, generation, SUM(suicides_no) as Total_suicides
+From SuicideRatesProject..SuicideRates
+group by country, generation
+order by 1,3 desc
+
+
+-- Comparing suicide numbers to HDI
+Select country, year, suicides_no, population, [HDI for year (Human Development Index)], (suicides_no / population) * 100  as Suicide_rate
+From SuicideRatesProject..SuicideRates
+where [HDI for year (Human Development Index)] is not null
+	and suicides_no <> 0
+	--and [HDI for year (Human Development Index)] < '0.5'
+order by 1,2,5
+
+
+
+-- Taking a look at United States data
+Select *
+From SuicideRatesProject..SuicideRates
+where country = 'United States'
+
+
+-- Using temp table to query US data
+drop table if exists #US_data
+Create table #US_data (
+country nvarchar(255),
+year float,
+sex nvarchar(50),
+age nvarchar(100),
+suicides_no float,
+population float,
+suicides_per_100k float,
+HDI nvarchar(255),
+generation nvarchar(50)
+)
+
+Insert into #US_data
+Select country, year, sex, age, suicides_no, population, [suicides/100k pop], [HDI for year (Human Development Index)],generation
+from SuicideRatesProject..SuicideRates
+where country = 'United States'
+
+select *
+from #US_data
+
+-- Calculating suicide rate for United States
+Select country, year, generation, suicides_no, population, (suicides_no/population) * 100 as Suicide_rate
+from #US_data
+order by 1,2,3,4
+
+
+-- Calculating total suicides and suicide rate per year in the US
+Select country, year, SUM(population) as Total_population ,SUM(suicides_no) as Total_suicides, (SUM(suicides_no)/SUM(population)) * 100 as Suicide_rate, HDI
+--, SUM(suicides_no) over (partition by year) as Running_total_suicides
+From #US_data
+group by country, year, HDI
+order by 1,2
+
+-- Calculating US total suicides by sex
+Select country, sex, SUM(suicides_no) as Total_suicides
+from #US_data
+group by country, sex
+
+-- Calcuting US total suicides by age groups
+Select country, age, SUM(suicides_no) as Total_suicides
+From #US_data
+group by country, age
+order by 3 desc
+
+-- Calculating US total suicides by generation
+Select country, generation, SUM(suicides_no) as Total_suicides
+From #US_data
+group by country, generation
+order by 3 desc
