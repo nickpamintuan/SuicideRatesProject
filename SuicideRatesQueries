@@ -139,16 +139,29 @@ order by 1,2,3,4
 
 
 -- Calculating total suicides and suicide rate per year in the US
-Select country, year, SUM(population) as Total_population ,SUM(suicides_no) as Total_suicides, (SUM(suicides_no)/SUM(population)) * 100 as Suicide_rate, HDI
---, SUM(suicides_no) over (partition by year) as Running_total_suicides
+Select country, year, SUM(population) as Total_population ,SUM(suicides_no) as Total_suicides, (SUM(suicides_no)/SUM(population)) * 100 as Suicide_rate
 From #US_data
-group by country, year, HDI
+group by country, year
 order by 1,2
 
 -- Calculating US total suicides by sex
 Select country, sex, SUM(suicides_no) as Total_suicides
 from #US_data
 group by country, sex
+
+-- Looking at US total suicides per year for males
+Select country, year, sex, SUM(suicides_no) as Total_suicides
+from #US_data
+where sex = 'male'
+group by country, year, sex
+order by 1,2,3
+
+-- Looking at US total suicides per year for females
+Select country, year, sex, SUM(suicides_no) as Total_suicides
+from #US_data
+where sex = 'female'
+group by country, year, sex
+order by 1,2,3
 
 -- Calcuting US total suicides by age groups
 Select country, age, SUM(suicides_no) as Total_suicides
